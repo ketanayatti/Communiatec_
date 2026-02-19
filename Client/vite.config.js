@@ -17,9 +17,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 //     chunk breaks ES module initialization order.
 // ────────────────────────────────────────────────────────────────────
 const ISOLATED_CHUNKS = {
-  "vendor-monaco": ["node_modules/monaco-editor", "node_modules/@monaco-editor"],
-  "vendor-three":  ["node_modules/three", "node_modules/@react-three"],
-  "vendor-emoji":  ["node_modules/emoji-picker-react"],
+  "vendor-monaco": [
+    "node_modules/monaco-editor",
+    "node_modules/@monaco-editor",
+  ],
+  "vendor-three": ["node_modules/three", "node_modules/@react-three"],
+  "vendor-emoji": ["node_modules/emoji-picker-react"],
 };
 
 export default defineConfig({
@@ -44,7 +47,12 @@ export default defineConfig({
         clientsClaim: true,
         // Don't precache Monaco workers — they are huge and loaded on
         // demand only when the CodeEditor page is visited.
-        globIgnores: ["**/ts.worker-*.js", "**/css.worker-*.js", "**/html.worker-*.js", "**/json.worker-*.js"],
+        globIgnores: [
+          "**/ts.worker-*.js",
+          "**/css.worker-*.js",
+          "**/html.worker-*.js",
+          "**/json.worker-*.js",
+        ],
       },
       manifest: {
         name: "Communiatec",
@@ -139,5 +147,22 @@ export default defineConfig({
 
   define: {
     global: "globalThis",
+  },
+
+  // ─── Dev Server ─────────────────────────────────────────────────
+  // Proxy /socket.io/ and /api/ to the backend so that sockets can
+  // connect to window.location.origin in dev (same as prod/nginx).
+  server: {
+    proxy: {
+      "/socket.io": {
+        target: "http://localhost:4000",
+        ws: true,
+        changeOrigin: true,
+      },
+      "/api": {
+        target: "http://localhost:4000",
+        changeOrigin: true,
+      },
+    },
   },
 });
