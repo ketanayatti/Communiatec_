@@ -13,14 +13,71 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // you with a bloated chunk again.
 // ────────────────────────────────────────────────────────────────────
 const VENDOR_CHUNKS = {
-  "vendor-react": ["node_modules/react/", "node_modules/react-dom/", "node_modules/react-router", "node_modules/scheduler"],
-  "vendor-monaco": ["node_modules/monaco-editor", "node_modules/@monaco-editor"],
-  "vendor-three": ["node_modules/three", "node_modules/@react-three"],
-  "vendor-radix": ["node_modules/@radix-ui"],
-  "vendor-animation": ["node_modules/framer-motion", "node_modules/@react-spring", "node_modules/gsap"],
-  "vendor-charts": ["node_modules/recharts", "node_modules/d3-", "node_modules/d3/"],
+  // ── Core React (no external deps) ──
+  "vendor-react": [
+    "node_modules/react/",
+    "node_modules/react-dom/",
+    "node_modules/react-router",
+    "node_modules/scheduler",
+  ],
+
+  // ── Monaco Editor (huge, loads lazily) ──
+  "vendor-monaco": [
+    "node_modules/monaco-editor",
+    "node_modules/@monaco-editor",
+  ],
+
+  // ── Three.js (huge, loads lazily) ──
+  "vendor-three": [
+    "node_modules/three",
+    "node_modules/@react-three",
+  ],
+
+  // ── Radix + Sonner + UI utility libs ──
+  // CRITICAL: sonner depends on @radix-ui internals, and class-variance-authority /
+  // clsx / tailwind-merge are used alongside Radix everywhere. They MUST stay in the
+  // same chunk to avoid circular cross-chunk imports at runtime.
+  "vendor-ui": [
+    "node_modules/@radix-ui",
+    "node_modules/sonner",
+    "node_modules/class-variance-authority",
+    "node_modules/clsx",
+    "node_modules/tailwind-merge",
+    "node_modules/@emotion/is-prop-valid",
+    "node_modules/next-themes",
+    "node_modules/lucide-react",
+    "node_modules/react-icons",
+    "node_modules/@heroicons",
+  ],
+
+  // ── Animation (framer-motion, GSAP, react-spring) ──
+  "vendor-animation": [
+    "node_modules/framer-motion",
+    "node_modules/@react-spring",
+    "node_modules/gsap",
+  ],
+
+  // ── Charts ──
+  "vendor-charts": [
+    "node_modules/recharts",
+    "node_modules/d3-",
+    "node_modules/d3/",
+  ],
+
+  // ── Emoji picker (large, rarely loaded) ──
   "vendor-emoji": ["node_modules/emoji-picker-react"],
+
+  // ── Socket.IO ──
   "vendor-socket": ["node_modules/socket.io"],
+
+  // ── State & data libs ──
+  "vendor-data": [
+    "node_modules/zustand",
+    "node_modules/use-sync-external-store",
+    "node_modules/axios",
+    "node_modules/date-fns",
+    "node_modules/moment",
+  ],
 };
 
 export default defineConfig({
