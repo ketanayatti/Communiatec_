@@ -497,7 +497,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-3 px-6 py-3 bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-700/50">
               <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
               <span className="text-slate-300 font-semibold">
-                System Status: Online ✅ CI/CD Verified
+                System Status: Online
               </span>
             </div>
 
