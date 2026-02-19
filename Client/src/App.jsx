@@ -4,7 +4,6 @@ import Auth from "./pages/Auth";
 import Loader from "./pages/Loader";
 import { useStore } from "@/store/store";
 import apiClient from "./lib/apiClient";
-
 // Lazy load pages for better performance
 const Chat = React.lazy(() => import("./pages/Chat"));
 const Profile = React.lazy(() => import("./pages/Profile"));
