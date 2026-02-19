@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USER = "ketanayatti"
+        DOCKERHUB_USER = "kethanayatti"
         APP_SERVER = "172.31.28.8"
         DEPLOY_PATH = "/home/ubuntu/Communiatec"
     }
