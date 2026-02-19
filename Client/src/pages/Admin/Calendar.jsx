@@ -1,4 +1,3 @@
-// CI/CD Pipeline Test - Build v1.0.1 | 2026-02-19
 import { useState, useEffect } from "react";
 import { useSocket } from "@/context/SocketContext";
 import {
@@ -650,10 +649,6 @@ const AdminCalendar = () => {
             <div className="flex items-center gap-3 px-6 py-3 bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-xl">
               <Globe className="h-4 w-4 text-purple-400" />
               <span className="text-slate-300 font-semibold">Global Events</span>
-            </div>
-            
-            <div className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 backdrop-blur-xl rounded-2xl border border-emerald-500/30 shadow-xl shadow-emerald-500/10">
-              <span className="text-emerald-300 font-bold text-sm">Build v1.0.1</span>
             </div>
           </motion.div>
         </div>
