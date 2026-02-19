@@ -16,7 +16,7 @@
 services:
 
   server:
-    image: ketanayatti/communiatec-server:latest
+    image: kethanayatti/communiatec-server:latest
     container_name: communiatec-server
     restart: unless-stopped
     env_file:
@@ -31,7 +31,7 @@ services:
       - communiatec-network
 
   client:
-    image: ketanayatti/communiatec-client:latest
+    image: kethanayatti/communiatec-client:latest
     container_name: communiatec-client
     restart: unless-stopped
     ports:
