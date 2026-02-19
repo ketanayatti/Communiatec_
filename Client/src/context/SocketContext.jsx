@@ -41,17 +41,11 @@ export const SocketProvider = ({ children }) => {
   // Chat Socket (existing functionality)
   useEffect(() => {
     if (userInfo) {
-      // Use the API server URL for socket connections.
-      // In dev, Vite runs on a different port than the backend, so
-      // window.location.origin would point to Vite (e.g. :5173) instead
-      // of the server (e.g. :4000). VITE_API_URL gives us the real server.
-      const SOCKET_URL = (() => {
-        const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_APP_SERVER_URL;
-        if (envUrl) {
-          try { return new URL(envUrl).origin; } catch { return envUrl; }
-        }
-        return typeof window !== "undefined" ? window.location.origin : "";
-      })();
+      // In both dev and production, socket connections go through the
+      // same origin (Vite proxy in dev, nginx in prod). This avoids
+      // cross-origin issues and works consistently everywhere.
+      const SOCKET_URL =
+        typeof window !== "undefined" ? window.location.origin : "";
       socket.current = io(SOCKET_URL, {
         withCredentials: true,
         query: {
@@ -385,14 +379,10 @@ export const SocketProvider = ({ children }) => {
     console.log("🔌 Session ID:", sessionId);
 
     // Create connection to /code namespace with forceNew to ensure unique connection
-    // Use VITE_API_URL origin so we connect to the real backend, not the Vite dev server.
-    const SOCKET_URL = (() => {
-      const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_APP_SERVER_URL;
-      if (envUrl) {
-        try { return new URL(envUrl).origin; } catch { return envUrl; }
-      }
-      return typeof window !== "undefined" ? window.location.origin : "";
-    })();
+    // Use window.location.origin — Vite proxy (dev) and nginx (prod)
+    // both forward /socket.io/ to the backend server.
+    const SOCKET_URL =
+      typeof window !== "undefined" ? window.location.origin : "";
     const codeSocketInstance = io(`${SOCKET_URL}/code`, {
       withCredentials: true,
       auth: {
