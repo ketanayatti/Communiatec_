@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import apiClient from "@/lib/apiClient";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff, Loader2, Shield, CheckCircle2, AlertTriangle } from "lucide-react";
 
 const ResetPassword = ({ user, onPasswordReset }) => {
@@ -75,32 +74,18 @@ const ResetPassword = ({ user, onPasswordReset }) => {
   const isValidPassword = passwordStrength >= 3 && passwordsMatch;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-gray-900 to-black">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-4 -left-4 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-1/2 -right-4 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute -bottom-8 left-1/3 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
-      </div>
-      
-      <motion.div 
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 20, scale: 0.95 }}
-        transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-        className="relative w-full max-w-lg"
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950">
+      <div className="relative w-full max-w-lg">
         {/* Main card */}
-        <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl shadow-black/50 overflow-hidden">
-          {/* Header with gradient */}
-          <div className="relative bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-cyan-600/20 p-8 pb-6">
-            <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]"></div>
+        <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800 rounded-3xl shadow-2xl overflow-hidden">
+          {/* Header */}
+          <div className="relative p-8 pb-6 bg-slate-800/40">
             <div className="relative flex items-center justify-center mb-4">
-              <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20">
+              <div className="p-3 bg-slate-700/50 rounded-2xl border border-slate-600/50">
                 <Shield className="w-8 h-8 text-blue-400" />
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold text-center text-white">
               Reset Password
             </h2>
             <p className="text-center text-gray-400 mt-2 text-sm leading-relaxed">
@@ -122,7 +107,7 @@ const ResetPassword = ({ user, onPasswordReset }) => {
                   placeholder="Enter your new password"
                   value={newPassword}
                   onChange={(e) => handlePasswordChange(e.target.value)}
-                  className="w-full h-14 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:bg-white/10 focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 backdrop-blur-sm text-base px-4 pr-12 group-hover:border-white/20"
+                  className="w-full h-14 bg-white/5 border border-slate-700 rounded-xl text-white placeholder-gray-500 focus:bg-white/10 focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-200 text-base px-4 pr-12 group-hover:border-slate-600"
                 />
                 <button
                   type="button"
@@ -144,7 +129,7 @@ const ResetPassword = ({ user, onPasswordReset }) => {
                   </div>
                   <div className="w-full bg-white/10 rounded-full h-2">
                     <div 
-                      className={`h-2 rounded-full transition-all duration-300 ${getStrengthColor()}`}
+                      className={`h-2 rounded-full transition-all duration-200 ${getStrengthColor()}`}
                       style={{ width: `${(passwordStrength / 5) * 100}%` }}
                     ></div>
                   </div>
@@ -164,7 +149,7 @@ const ResetPassword = ({ user, onPasswordReset }) => {
                   placeholder="Confirm your new password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full h-14 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:bg-white/10 focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 backdrop-blur-sm text-base px-4 pr-12 group-hover:border-white/20"
+                  className="w-full h-14 bg-white/5 border border-slate-700 rounded-xl text-white placeholder-gray-500 focus:bg-white/10 focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-200 text-base px-4 pr-12 group-hover:border-slate-600"
                 />
                 <button
                   type="button"
@@ -193,16 +178,14 @@ const ResetPassword = ({ user, onPasswordReset }) => {
               )}
             </div>
 
-
-
             {/* Submit Button */}
             <Button
               onClick={handleResetPassword}
               disabled={loading || !isValidPassword}
-              className={`w-full h-14 rounded-xl font-semibold text-base transition-all duration-300 ${ 
+              className={`w-full h-14 rounded-xl font-semibold text-base transition-all duration-200 ${ 
                 loading || !isValidPassword
                   ? 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 hover:from-blue-500 hover:via-purple-500 hover:to-cyan-500 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98]'
+                  : 'bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg'
               }`}
             >
               {loading ? (
@@ -223,7 +206,7 @@ const ResetPassword = ({ user, onPasswordReset }) => {
             Your password will be encrypted and stored securely
           </p>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

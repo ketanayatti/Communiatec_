@@ -5,6 +5,7 @@ import { useStore } from "@/store/store";
 import { useSocket } from "@/context/SocketContext";
 import MonacoEditor from "../../components/code-editor/MonacoEditor";
 import LiveUsers from "../../components/code-editor/LiveUsers";
+import VideoCall from "../../components/code-editor/VideoCall";
 import LoginModal from "./LoginModal";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -935,6 +936,18 @@ const CodeEditor = () => {
           }`}
         >
           <div className="p-5 space-y-4">
+            {/* Video / Voice Call */}
+            <div>
+              <VideoCall
+                codeSocket={codeSocket}
+                sessionId={sessionId}
+                currentUserId={currentUserId}
+                userInfo={userInfo}
+                isCodeConnected={isConnected}
+                participants={participants}
+              />
+            </div>
+
             {/* Live Users */}
             <div>
               <LiveUsers

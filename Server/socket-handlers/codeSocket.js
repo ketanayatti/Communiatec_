@@ -469,6 +469,184 @@ const handleCodeCollaboration = (io) => {
         console.error("❌ Get session info error:", error);
       }
     });
+
+    // ─────────────────────────────────────────────────────────────
+    // 📹 WebRTC Signaling Events for Video/Voice Calls
+    // ─────────────────────────────────────────────────────────────
+
+    // Initiator sends an offer to start a call
+    socket.on("call-user", (data) => {
+      const { sessionId, callType } = data;
+      const effectiveSessionId = socket.sessionId || sessionId;
+      if (!effectiveSessionId) return;
+
+      console.log(
+        `📞 User ${socket.userId} starting ${callType || "video"} call in session ${effectiveSessionId}`,
+      );
+
+      // Notify all other users in the session that a call is incoming
+      socket.to(effectiveSessionId).emit("incoming-call", {
+        callerId: socket.userId,
+        callerInfo: socket.userInfo,
+        callerSocketId: socket.id,
+        callType: callType || "video",
+        sessionId: effectiveSessionId,
+      });
+    });
+
+    // Callee accepts the call
+    socket.on("call-accepted", (data) => {
+      const { sessionId, callerId, callerSocketId } = data;
+      const effectiveSessionId = socket.sessionId || sessionId;
+      if (!effectiveSessionId) return;
+
+      console.log(
+        `✅ User ${socket.userId} accepted call from ${callerId} in session ${effectiveSessionId}`,
+      );
+
+      // Notify the caller that the call was accepted
+      if (callerSocketId) {
+        codeNamespace.to(callerSocketId).emit("call-accepted", {
+          acceptorId: socket.userId,
+          acceptorInfo: socket.userInfo,
+          acceptorSocketId: socket.id,
+        });
+      } else {
+        // Fallback: broadcast to session
+        socket.to(effectiveSessionId).emit("call-accepted", {
+          acceptorId: socket.userId,
+          acceptorInfo: socket.userInfo,
+          acceptorSocketId: socket.id,
+        });
+      }
+    });
+
+    // Callee rejects the call
+    socket.on("call-rejected", (data) => {
+      const { sessionId, callerId, callerSocketId } = data;
+      const effectiveSessionId = socket.sessionId || sessionId;
+      if (!effectiveSessionId) return;
+
+      console.log(
+        `❌ User ${socket.userId} rejected call in session ${effectiveSessionId}`,
+      );
+
+      if (callerSocketId) {
+        codeNamespace.to(callerSocketId).emit("call-rejected", {
+          rejectorId: socket.userId,
+          rejectorInfo: socket.userInfo,
+        });
+      } else {
+        socket.to(effectiveSessionId).emit("call-rejected", {
+          rejectorId: socket.userId,
+          rejectorInfo: socket.userInfo,
+        });
+      }
+    });
+
+    // User ends the call
+    socket.on("call-ended", (data) => {
+      const { sessionId } = data;
+      const effectiveSessionId = socket.sessionId || sessionId;
+      if (!effectiveSessionId) return;
+
+      console.log(
+        `📴 User ${socket.userId} ended call in session ${effectiveSessionId}`,
+      );
+
+      socket.to(effectiveSessionId).emit("call-ended", {
+        userId: socket.userId,
+      });
+    });
+
+    // WebRTC SDP Offer relay
+    socket.on("webrtc-offer", (data) => {
+      const { sessionId, targetSocketId, offer } = data;
+      const effectiveSessionId = socket.sessionId || sessionId;
+      if (!effectiveSessionId) return;
+
+      console.log(
+        `📡 Relaying WebRTC offer from ${socket.id} to ${targetSocketId || "room"}`,
+      );
+
+      if (targetSocketId) {
+        codeNamespace.to(targetSocketId).emit("webrtc-offer", {
+          offer,
+          callerSocketId: socket.id,
+          callerId: socket.userId,
+          callerInfo: socket.userInfo,
+        });
+      } else {
+        socket.to(effectiveSessionId).emit("webrtc-offer", {
+          offer,
+          callerSocketId: socket.id,
+          callerId: socket.userId,
+          callerInfo: socket.userInfo,
+        });
+      }
+    });
+
+    // WebRTC SDP Answer relay
+    socket.on("webrtc-answer", (data) => {
+      const { sessionId, targetSocketId, answer } = data;
+      const effectiveSessionId = socket.sessionId || sessionId;
+      if (!effectiveSessionId) return;
+
+      console.log(
+        `📡 Relaying WebRTC answer from ${socket.id} to ${targetSocketId || "room"}`,
+      );
+
+      if (targetSocketId) {
+        codeNamespace.to(targetSocketId).emit("webrtc-answer", {
+          answer,
+          answererSocketId: socket.id,
+          answererId: socket.userId,
+          answererInfo: socket.userInfo,
+        });
+      } else {
+        socket.to(effectiveSessionId).emit("webrtc-answer", {
+          answer,
+          answererSocketId: socket.id,
+          answererId: socket.userId,
+          answererInfo: socket.userInfo,
+        });
+      }
+    });
+
+    // WebRTC ICE Candidate relay
+    socket.on("webrtc-ice-candidate", (data) => {
+      const { sessionId, targetSocketId, candidate } = data;
+      const effectiveSessionId = socket.sessionId || sessionId;
+      if (!effectiveSessionId) return;
+
+      if (targetSocketId) {
+        codeNamespace.to(targetSocketId).emit("webrtc-ice-candidate", {
+          candidate,
+          senderSocketId: socket.id,
+          senderId: socket.userId,
+        });
+      } else {
+        socket.to(effectiveSessionId).emit("webrtc-ice-candidate", {
+          candidate,
+          senderSocketId: socket.id,
+          senderId: socket.userId,
+        });
+      }
+    });
+
+    // Toggle media state notification (mute/unmute, camera on/off)
+    socket.on("toggle-media", (data) => {
+      const { sessionId, mediaType, enabled } = data;
+      const effectiveSessionId = socket.sessionId || sessionId;
+      if (!effectiveSessionId) return;
+
+      socket.to(effectiveSessionId).emit("peer-media-toggle", {
+        userId: socket.userId,
+        userInfo: socket.userInfo,
+        mediaType, // "audio" or "video"
+        enabled,
+      });
+    });
   });
 
   console.log(

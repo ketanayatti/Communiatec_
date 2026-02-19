@@ -110,18 +110,7 @@
 
 /* Hide scrollbar for IE, Edge and Firefox */
   
-  /* Floating slow animation */
-  @keyframes floatSlow {
-    0%, 100% {
-      transform: translateY(-10px);
-    }
-    50% {
-      transform: translateY(10px);
-    }
-  }
-  .animate-float-slow {
-    animation: floatSlow 14s ease-in-out infinite;
-  }
+
 .no-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
