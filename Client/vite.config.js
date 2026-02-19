@@ -6,78 +6,20 @@ import { VitePWA } from "vite-plugin-pwa";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// ─── Vendor chunking map ───────────────────────────────────────────
-// Each key is a chunk name, each value is an array of package-name
-// substrings to match.  When you add a BIG new dependency in the
-// future, just add a new entry here — the build will never surprise
-// you with a bloated chunk again.
+// ─── Manual chunk splitting ────────────────────────────────────────
+// ONLY split out huge, self-contained libraries that load lazily.
+// Everything else is left to Rollup's automatic chunking, which
+// respects the module graph and avoids circular-import TDZ errors
+// like "Cannot access 'S' before initialization".
+//
+// ⚠️  DO NOT add a catch-all "vendor-misc" — that was the root cause
+//     of the production crash. Forcing unrelated packages into one
+//     chunk breaks ES module initialization order.
 // ────────────────────────────────────────────────────────────────────
-const VENDOR_CHUNKS = {
-  // ── Core React (no external deps) ──
-  "vendor-react": [
-    "node_modules/react/",
-    "node_modules/react-dom/",
-    "node_modules/react-router",
-    "node_modules/scheduler",
-  ],
-
-  // ── Monaco Editor (huge, loads lazily) ──
-  "vendor-monaco": [
-    "node_modules/monaco-editor",
-    "node_modules/@monaco-editor",
-  ],
-
-  // ── Three.js (huge, loads lazily) ──
-  "vendor-three": [
-    "node_modules/three",
-    "node_modules/@react-three",
-  ],
-
-  // ── Radix + Sonner + UI utility libs ──
-  // CRITICAL: sonner depends on @radix-ui internals, and class-variance-authority /
-  // clsx / tailwind-merge are used alongside Radix everywhere. They MUST stay in the
-  // same chunk to avoid circular cross-chunk imports at runtime.
-  "vendor-ui": [
-    "node_modules/@radix-ui",
-    "node_modules/sonner",
-    "node_modules/class-variance-authority",
-    "node_modules/clsx",
-    "node_modules/tailwind-merge",
-    "node_modules/@emotion/is-prop-valid",
-    "node_modules/next-themes",
-    "node_modules/lucide-react",
-    "node_modules/react-icons",
-    "node_modules/@heroicons",
-  ],
-
-  // ── Animation (framer-motion, GSAP, react-spring) ──
-  "vendor-animation": [
-    "node_modules/framer-motion",
-    "node_modules/@react-spring",
-    "node_modules/gsap",
-  ],
-
-  // ── Charts ──
-  "vendor-charts": [
-    "node_modules/recharts",
-    "node_modules/d3-",
-    "node_modules/d3/",
-  ],
-
-  // ── Emoji picker (large, rarely loaded) ──
-  "vendor-emoji": ["node_modules/emoji-picker-react"],
-
-  // ── Socket.IO ──
-  "vendor-socket": ["node_modules/socket.io"],
-
-  // ── State & data libs ──
-  "vendor-data": [
-    "node_modules/zustand",
-    "node_modules/use-sync-external-store",
-    "node_modules/axios",
-    "node_modules/date-fns",
-    "node_modules/moment",
-  ],
+const ISOLATED_CHUNKS = {
+  "vendor-monaco": ["node_modules/monaco-editor", "node_modules/@monaco-editor"],
+  "vendor-three":  ["node_modules/three", "node_modules/@react-three"],
+  "vendor-emoji":  ["node_modules/emoji-picker-react"],
 };
 
 export default defineConfig({
@@ -154,19 +96,19 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        // Future-proof chunking: any new dependency you install will
-        // either match a named chunk above or fall into "vendor-misc".
+        // Only split out truly huge, isolated libraries.
+        // Everything else is auto-chunked by Rollup so the module
+        // initialization order is always correct.
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
 
-          for (const [chunkName, matchers] of Object.entries(VENDOR_CHUNKS)) {
+          for (const [chunkName, matchers] of Object.entries(ISOLATED_CHUNKS)) {
             if (matchers.some((m) => id.includes(m))) {
               return chunkName;
             }
           }
 
-          // Everything else from node_modules goes here
-          return "vendor-misc";
+          // Let Rollup decide — no catch-all "vendor-misc"!
         },
       },
     },
