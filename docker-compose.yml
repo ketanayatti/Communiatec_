@@ -14,15 +14,11 @@
 # ============================================
 
 services:
-  # ── Backend API Server ──────────────────────
+
   server:
-    build:
-      context: ./Server
-      dockerfile: Dockerfile
+    image: ketanayatti/communiatec-server:latest
     container_name: communiatec-server
     restart: unless-stopped
-    ports:
-      - "${SERVER_PORT:-4000}:${SERVER_PORT:-4000}"
     env_file:
       - ./Server/.env.production
     environment:
@@ -33,28 +29,16 @@ services:
       - server-logs:/app/logs
     networks:
       - communiatec-network
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:${SERVER_PORT:-4000}/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
 
-  # ── Frontend Client ─────────────────────────
   client:
-    build:
-      context: ./Client
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL:?VITE_API_URL is required}
-        VITE_APP_SERVER_URL: ${VITE_APP_SERVER_URL:?VITE_APP_SERVER_URL is required}
+    image: ketanayatti/communiatec-client:latest
     container_name: communiatec-client
     restart: unless-stopped
     ports:
       - "${CLIENT_PORT:-80}:80"
     depends_on:
       server:
-        condition: service_healthy
+        condition: service_started
     networks:
       - communiatec-network
 
