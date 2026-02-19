@@ -44,9 +44,7 @@ export const SocketProvider = ({ children }) => {
       // Socket.IO interprets URL paths as namespaces, so we must use
       // only the origin (no path like "/api") for the connection URL.
       const SOCKET_URL =
-        typeof window !== "undefined"
-          ? window.location.origin
-          : "";
+        typeof window !== "undefined" ? window.location.origin : "";
       socket.current = io(SOCKET_URL, {
         withCredentials: true,
         query: {
