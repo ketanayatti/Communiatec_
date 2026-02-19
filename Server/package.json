@@ -7,7 +7,7 @@
     "start": "NODE_ENV=production node server.js",
     "dev": "NODE_ENV=development nodemon server.js",
     "start:win": "set NODE_ENV=production && node server.js",
-    "dev:win": "set NODE_ENV=development && nodemon server.js"
+    "dev:win": "nodemon server.js"
   },
   "keywords": [],
   "author": "",

@@ -41,10 +41,17 @@ export const SocketProvider = ({ children }) => {
   // Chat Socket (existing functionality)
   useEffect(() => {
     if (userInfo) {
-      // Socket.IO interprets URL paths as namespaces, so we must use
-      // only the origin (no path like "/api") for the connection URL.
-      const SOCKET_URL =
-        typeof window !== "undefined" ? window.location.origin : "";
+      // Use the API server URL for socket connections.
+      // In dev, Vite runs on a different port than the backend, so
+      // window.location.origin would point to Vite (e.g. :5173) instead
+      // of the server (e.g. :4000). VITE_API_URL gives us the real server.
+      const SOCKET_URL = (() => {
+        const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_APP_SERVER_URL;
+        if (envUrl) {
+          try { return new URL(envUrl).origin; } catch { return envUrl; }
+        }
+        return typeof window !== "undefined" ? window.location.origin : "";
+      })();
       socket.current = io(SOCKET_URL, {
         withCredentials: true,
         query: {
@@ -378,10 +385,14 @@ export const SocketProvider = ({ children }) => {
     console.log("🔌 Session ID:", sessionId);
 
     // Create connection to /code namespace with forceNew to ensure unique connection
-    // Use origin only — getBaseUrl() may return "/api" which Socket.IO
-    // would interpret as namespace "/api/code" instead of "/code".
-    const SOCKET_URL =
-      typeof window !== "undefined" ? window.location.origin : "";
+    // Use VITE_API_URL origin so we connect to the real backend, not the Vite dev server.
+    const SOCKET_URL = (() => {
+      const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_APP_SERVER_URL;
+      if (envUrl) {
+        try { return new URL(envUrl).origin; } catch { return envUrl; }
+      }
+      return typeof window !== "undefined" ? window.location.origin : "";
+    })();
     const codeSocketInstance = io(`${SOCKET_URL}/code`, {
       withCredentials: true,
       auth: {
@@ -405,9 +416,8 @@ export const SocketProvider = ({ children }) => {
     // Store session ID on socket instance for reference
     codeSocketInstance.sessionId = sessionId;
 
-    // 🔧 FIX: Track connection state properly
+    // Track connection state
     let isConnecting = true;
-    let hasEmittedJoin = false;
 
     // 🔧 CRITICAL: Set connecting state FIRST, before any event handlers
     setCodeConnectionState("connecting");
@@ -419,32 +429,11 @@ export const SocketProvider = ({ children }) => {
       console.log("✅ Socket.connected:", codeSocketInstance.connected);
       isConnecting = false;
       setCodeConnectionState("connected");
-
-      // CRITICAL FIX: Only emit join once, and ensure socket is ready
-      if (!hasEmittedJoin && codeSocketInstance.connected) {
-        hasEmittedJoin = true;
-        console.log(`🎯 Auto-joining session: ${sessionId}`);
-        codeSocketInstance.emit("join-code-session", {
-          sessionId,
-          user: userInfo,
-        });
-      }
+      // join-code-session is emitted by the CodeEditor component
     };
 
     // Set up connection handler BEFORE checking if connected
     codeSocketInstance.on("connect", onConnect);
-
-    // CRITICAL: Check connection status after a brief delay to ensure socket is initialized
-    setTimeout(() => {
-      console.log("🔍 Checking socket connection status...");
-      console.log("🔍 Socket.connected:", codeSocketInstance.connected);
-      console.log("🔍 Socket.id:", codeSocketInstance.id);
-
-      if (codeSocketInstance.connected && isConnecting) {
-        console.log("⚡ Socket already connected, calling onConnect manually");
-        onConnect();
-      }
-    }, 50);
 
     codeSocketInstance.on("disconnect", (reason) => {
       console.log("❌ Code socket disconnected:", reason);
@@ -462,24 +451,8 @@ export const SocketProvider = ({ children }) => {
       console.log(`✅ Code socket reconnected after ${attemptNumber} attempts`);
       console.log("✅ New Socket ID after reconnect:", codeSocketInstance.id);
       isConnecting = false;
-      hasEmittedJoin = false; // Reset for rejoin
       setCodeConnectionState("connected");
-
-      // Rejoin session immediately after reconnect
-      if (codeSocketInstance.connected && !hasEmittedJoin) {
-        hasEmittedJoin = true;
-        console.log(`🔄 Rejoining session after reconnect: ${sessionId}`);
-        codeSocketInstance.emit("join-code-session", {
-          sessionId,
-          user: userInfo,
-        });
-
-        // Fetch latest session state after a brief delay
-        setTimeout(() => {
-          console.log("🔄 Fetching latest session state after reconnection...");
-          codeSocketInstance.emit("get-session-info", { sessionId });
-        }, 500);
-      }
+      // join-code-session is re-emitted by the CodeEditor component's connect handler
     });
 
     codeSocketInstance.on("reconnect_attempt", (attemptNumber) => {

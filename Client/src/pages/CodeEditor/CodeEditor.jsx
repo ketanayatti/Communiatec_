@@ -111,8 +111,8 @@ const CodeEditor = () => {
     socket.off("language-update");
     socket.off("pong");
     socket.off("code-ack");
-    socket.off("connect");
-    socket.off("disconnect");
+    // NOTE: Do NOT remove "connect" / "disconnect" handlers here —
+    // SocketContext's handlers manage codeConnectionState which gates isConnected.
 
     // Monitor socket connection state changes
     const onConnect = () => {
@@ -121,9 +121,19 @@ const CodeEditor = () => {
       // Update connection state
       setSocketConnected(true);
 
-      // Show reconnection success if this isn't the initial connection
-      if (sessionJoinedRef.current) {
-        toast.success("Reconnected to collaboration session!");
+      // Emit join-code-session to join the collaboration room
+      if (socket.connected && userInfo && sessionId) {
+        if (sessionJoinedRef.current) {
+          // Reconnection — rejoin the room and notify user
+          console.log("🔄 Rejoining session after reconnect:", sessionId);
+          toast.success("Reconnected to collaboration session!");
+        } else {
+          console.log("🎯 Joining session from component:", sessionId);
+        }
+        socket.emit("join-code-session", {
+          sessionId,
+          user: userInfo,
+        });
       }
     };
 
