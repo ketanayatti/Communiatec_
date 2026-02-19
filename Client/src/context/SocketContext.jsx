@@ -8,7 +8,6 @@ import React, {
 } from "react";
 import { useStore } from "@/store/store.js";
 import { io } from "socket.io-client";
-import { getBaseUrl } from "@/lib/apiClient";
 import { toast } from "sonner";
 import { parseISO, format } from "date-fns";
 
@@ -42,9 +41,10 @@ export const SocketProvider = ({ children }) => {
   // Chat Socket (existing functionality)
   useEffect(() => {
     if (userInfo) {
+      // Socket.IO interprets URL paths as namespaces, so we must use
+      // only the origin (no path like "/api") for the connection URL.
       const SOCKET_URL =
-        import.meta.env.VITE_API_URL ||
-        `${window.location.protocol}//${window.location.hostname}${window.location.port ? ":" + window.location.port : ""}`;
+        typeof window !== "undefined" ? window.location.origin : "";
       socket.current = io(SOCKET_URL, {
         withCredentials: true,
         query: {
@@ -378,7 +378,10 @@ export const SocketProvider = ({ children }) => {
     console.log("🔌 Session ID:", sessionId);
 
     // Create connection to /code namespace with forceNew to ensure unique connection
-    const SOCKET_URL = getBaseUrl();
+    // Use origin only — getBaseUrl() may return "/api" which Socket.IO
+    // would interpret as namespace "/api/code" instead of "/code".
+    const SOCKET_URL =
+      typeof window !== "undefined" ? window.location.origin : "";
     const codeSocketInstance = io(`${SOCKET_URL}/code`, {
       withCredentials: true,
       auth: {
