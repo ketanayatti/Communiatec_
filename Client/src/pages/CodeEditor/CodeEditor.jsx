@@ -33,9 +33,8 @@ const CodeEditor = () => {
   } = useSocket();
   const currentUserId = (userInfo?.id || userInfo?._id)?.toString();
 
-  // Socket and connection states
+  // Socket reference (mirrors SocketContext's live instance)
   const [codeSocket, setCodeSocket] = useState(null);
-  // Trust the live socket flag directly to avoid stale state gating emits
   const isConnected = Boolean(codeSocket?.connected);
 
   // Session and editor states
@@ -379,7 +378,7 @@ const CodeEditor = () => {
     setCode(newCode);
 
     // Emit to code socket - check connection state
-    const canEmit = isConnected && sessionId && sessionJoinedRef.current;
+    const canEmit = sessionId && sessionJoinedRef.current;
 
     if (canEmit) {
       console.log("📡 Emitting code change to server");
@@ -418,7 +417,7 @@ const CodeEditor = () => {
   };
 
   const handleCursorChange = (position) => {
-    if (isConnected && sessionId && sessionJoinedRef.current) {
+    if (sessionId && sessionJoinedRef.current) {
       emitCode("cursor-move", {
         sessionId,
         position,
@@ -430,7 +429,7 @@ const CodeEditor = () => {
   const handleLanguageChange = (newLanguage) => {
     setLanguage(newLanguage);
 
-    if (isConnected && sessionId && sessionJoinedRef.current) {
+    if (sessionId && sessionJoinedRef.current) {
       emitCode("language-change", {
         sessionId,
         language: newLanguage,
