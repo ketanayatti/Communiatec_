@@ -35,8 +35,8 @@ const CodeEditor = () => {
 
   // Socket and connection states
   const [codeSocket, setCodeSocket] = useState(null);
-  const [socketConnected, setSocketConnected] = useState(false);
-  const isConnected = socketConnected && codeConnectionState === "connected";
+  // Trust the live socket flag directly to avoid stale state gating emits
+  const isConnected = Boolean(codeSocket?.connected);
 
   // Session and editor states
   const [sessionData, setSessionData] = useState(null);
@@ -80,21 +80,14 @@ const CodeEditor = () => {
     }
   }, [userInfo, sessionId]);
 
-  // Update socket state when connection state changes to force re-render
+  // Snapshot connection transitions for debugging
   useEffect(() => {
     if (codeSocket) {
-      const socketIsConnected = codeSocket.connected;
-      const stateIsConnected = codeConnectionState === "connected";
-
-      console.log("🔄 Connection state changed:", {
+      console.log("🔄 Connection snapshot:", {
         codeConnectionState,
-        socketConnected: socketIsConnected,
+        socketConnected: codeSocket.connected,
         sessionJoined: sessionJoinedRef.current,
-        finalIsConnected: socketIsConnected && stateIsConnected,
       });
-
-      // Update connected state based on actual socket
-      setSocketConnected(socketIsConnected);
     }
   }, [codeConnectionState, codeSocket]);
 
@@ -118,8 +111,6 @@ const CodeEditor = () => {
     const onConnect = () => {
       console.log("✅ Code socket connected event received in component");
       console.log("✅ Socket.connected:", socket.connected);
-      // Update connection state
-      setSocketConnected(true);
 
       // Emit join-code-session to join the collaboration room
       if (socket.connected && userInfo && sessionId) {
@@ -145,8 +136,6 @@ const CodeEditor = () => {
 
     socket.on("disconnect", (reason) => {
       console.log("❌ Code socket disconnected in component:", reason);
-      // Update connection state
-      setSocketConnected(false);
       sessionJoinedRef.current = false;
 
       // Show user-friendly message based on disconnect reason
@@ -421,7 +410,7 @@ const CodeEditor = () => {
       }, 2000);
     } else {
       console.log("⚠️ Cannot emit code change - not connected or no session");
-      console.log("⚠️ Socket connected:", socketConnected);
+      console.log("⚠️ Socket connected:", codeSocket?.connected);
       console.log("⚠️ Connection state:", codeConnectionState);
       console.log("⚠️ Session ID:", sessionId);
       console.log("⚠️ Session joined:", sessionJoinedRef.current);
