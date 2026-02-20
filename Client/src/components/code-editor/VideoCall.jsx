@@ -122,6 +122,20 @@ const VideoCall = ({
   // ── Get local media stream ────────────────────────────
   const getLocalStream = useCallback(async () => {
     try {
+      // Guard for insecure context / unsupported media APIs (e.g., HTTP)
+      if (
+        typeof navigator === "undefined" ||
+        !navigator.mediaDevices ||
+        typeof navigator.mediaDevices.getUserMedia !== "function"
+      ) {
+        const isSecure = typeof window !== "undefined" && window.isSecureContext;
+        const reason = isSecure
+          ? "Media devices are unavailable in this browser/session."
+          : "getUserMedia requires HTTPS or localhost.";
+        toast.error(`${reason} Please open the app over HTTPS and allow camera/mic.`);
+        throw new Error("mediaDevices.getUserMedia unavailable");
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 640 },
